@@ -1,10 +1,21 @@
+import pandas as pd
+
 class PredictionAlgorithm:
     def __init__(self, data):
+        if not isinstance(data, pd.DataFrame):
+            raise TypeError("The data provided must be a pandas DataFrame.")
         self.data = data
 
+    def get_team_stats(self, team_name, season_data):
+        # Normalize team names and handle missing data
+        team_stats = season_data[season_data['Team'].str.strip().str.lower() == team_name.strip().lower()]
+        if team_stats.empty:
+            raise ValueError(f"Team '{team_name}' not found in the dataset.")
+        return team_stats.iloc[0]
+
     def generate_odds(self, home_team, away_team):
-        home_stats = self.data[self.data['Team'] == home_team].iloc[0]
-        away_stats = self.data[self.data['Team'] == away_team].iloc[0]
+        home_stats = self.get_team_stats(home_team, self.data)
+        away_stats = self.get_team_stats(away_team, self.data)
 
         home_win_prob = home_stats['W'] / 34
         away_win_prob = away_stats['W'] / 34
