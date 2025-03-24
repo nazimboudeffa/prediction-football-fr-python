@@ -7,13 +7,8 @@ This project is designed to predict match odds for Ligue 1 football matches base
 ```
 soccer-prediction
 ├── data
-│   └── ligue1-2023-2024.csv
-├── src
-│   ├── main.py
-│   ├── algorithms
-│   │   └── prediction.py
-│   └── utils
-│       └── data_loader.py
+│   └── france
+│       └── ligue1-2023-2024.csv
 ├── requirements.txt
 └── README.md
 ```
