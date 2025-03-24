@@ -8,7 +8,8 @@ This project is designed to predict match odds for Ligue 1 football matches base
 soccer-prediction
 ├── data
 │   └── france
-│       └── ligue1-2023-2024.csv
+│       ├── ligue1-2023-2024.csv
+│       └── ligue1-2024-2025.csv
 ├── requirements.txt
 └── README.md
 ```
@@ -50,3 +51,7 @@ After running the application, you will be prompted to enter the names of the ho
 ## Contributing
 
 Feel free to submit issues or pull requests if you have suggestions for improvements or additional features.
+
+## Disclaimer
+
+This software has no warranty and you are responsible for loosing your money
