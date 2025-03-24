@@ -18,7 +18,7 @@ soccer-prediction
 
 - **data**: Contains match results and statistics for exemple for the Ligue 1 2023-2024 season, including team names, wins, draws, losses, goals scored, goals against, and points.
 
-- **src/main.py**: The entry point of the application. It handles user input for home and away teams and calls the prediction algorithm to generate match odds.
+- **main.py**: The entry point of the application. It handles user input for home and away teams and calls the prediction algorithm to generate match odds.
 
 - **requirements.txt**: Lists the dependencies required for the project, such as pandas for data manipulation.
 
@@ -35,7 +35,7 @@ soccer-prediction
 4. Run the application:
 
    ```
-   python src/main.py
+   python main.py
    ```
 
 5. Follow the prompts to input the home and away teams for which you want to generate match prediction odds.
