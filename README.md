@@ -2,6 +2,10 @@
 
 This project is designed to predict match odds for Ligue 1 football matches based on historical data. The predictions are generated using a custom algorithm that analyzes team performance statistics.
 
+## Data
+
+https://understat.com
+
 ## Project Structure
 
 ```
