@@ -6,7 +6,7 @@ This project is designed to predict match odds for Ligue 1 football matches base
 
 https://understat.com
 
-https://coteur.com
+https://coteur.com (Algeria)
 
 ## Project Structure
 
