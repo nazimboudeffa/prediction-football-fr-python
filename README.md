@@ -4,7 +4,7 @@ This project is designed to predict match odds for Ligue 1 football matches base
 
 ## Data
 
-https://understat.com
+https://understat.com (France)
 
 https://coteur.com (Algeria)
 
