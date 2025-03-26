@@ -19,7 +19,7 @@ Ce facteur pourrait être calculé à partir des données individuelles du joueu
 4. Modification du code
 Vous pourriez ajouter une fonction pour ajuster les probabilités en fonction des transferts. Voici un exemple :
 
-```
+```python
 def adjust_team_stats_for_transfer(team_stats, player_impact, is_player_joining):
     """
     Adjust team statistics based on player transfer.
