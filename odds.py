@@ -25,8 +25,8 @@ def generate_odds(home_team, away_team):
 
     return {
         'home_win_odds': odds_home,
-        'away_win_odds': odds_away,
-        'draw_odds': odds_draw
+        'draw_odds': odds_draw,
+        'away_win_odds': odds_away
     }
 
 def generate_current_season_odds(home_team, away_team):
@@ -48,8 +48,8 @@ def generate_current_season_odds(home_team, away_team):
 
     return {
         'home_win_odds': odds_home,
-        'away_win_odds': odds_away,
-        'draw_odds': odds_draw
+        'draw_odds': odds_draw,
+        'away_win_odds': odds_away
     }
 
 '''
@@ -107,8 +107,8 @@ def generate_combined_odds(home_team, away_team, weight_current_season=0.6):
 
     return {
         'home_win_odds': odds_home,
-        'away_win_odds': odds_away,
-        'draw_odds': odds_draw
+        'draw_odds': odds_draw,
+        'away_win_odds': odds_away
     }
 
 def main():
