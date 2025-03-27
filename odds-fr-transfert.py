@@ -18,7 +18,7 @@ def adjust_team_stats_for_transfer(team_stats, player_impact, is_player_joining)
 
     return team_stats
 
-def generate_odds_transfert(home_team, away_team):
+def generate_odds_with_transfert(home_team, away_team):
     # Filter data for the current season
     current_season_data = pd.read_csv('data/france/ligue1-2023-2024.csv')
 
