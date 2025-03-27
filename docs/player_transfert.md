@@ -1,3 +1,6 @@
+## DATA
+https://www.footmercato.net/france/ligue-1/tableau/
+
 PROMPT : Que pense tu des changements sur les côtes si un joueur change d'équipe
 
 Si un joueur change d'équipe, cela peut avoir un impact significatif sur les cotes de victoire, de défaite ou de match nul, car les performances d'une équipe dépendent souvent de la qualité et de l'importance de ses joueurs clés. Voici quelques points à considérer pour intégrer ce changement dans votre système de prédiction :
