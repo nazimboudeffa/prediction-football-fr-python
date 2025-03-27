@@ -25,6 +25,7 @@ def generate_odds_transfert(home_team, away_team):
     home_stats = get_team_stats(home_team, current_season_data)
     away_stats = get_team_stats(away_team, current_season_data)
 
+    # Adjust team statistics for transfer impact
     home_stats = adjust_team_stats_for_transfer(home_stats, 0.3, True)  # Player joining with 30% impact
     away_stats = adjust_team_stats_for_transfer(away_stats, 0.2, False)  # Player leaving with 20% impact
 
