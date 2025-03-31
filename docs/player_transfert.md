@@ -1,5 +1,8 @@
 ## DATA
+
 https://www.footmercato.net/france/ligue-1/tableau/
+
+https://www.transfermarkt.com/ligue-1/transfers/wettbewerb/FR1
 
 ## LOGIC
 
