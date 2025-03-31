@@ -17,6 +17,7 @@ soccer-prediction
 │       ├── ligue1-2023-2024.csv
 │       └── ligue1-2024-2025.csv
 ├── requirements.txt
+├── algo.py
 └── README.md
 ```
 
