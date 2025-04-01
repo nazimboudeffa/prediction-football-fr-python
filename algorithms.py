@@ -85,16 +85,6 @@ def adjust_probs_for_home_away(home_win_prob, draw_prob, away_win_prob, home_adv
     adjusted_home_win_prob = home_win_prob + home_advantage
     adjusted_away_win_prob = away_win_prob + away_advantage
 
-    # Ensure probabilities remain valid (non-negative)
-    adjusted_home_win_prob = max(0, adjusted_home_win_prob)
-    adjusted_away_win_prob = max(0, adjusted_away_win_prob)
-
-    # Normalize probabilities to ensure they sum to 1
-    total_prob = adjusted_home_win_prob + draw_prob + adjusted_away_win_prob
-    adjusted_home_win_prob /= total_prob
-    draw_prob /= total_prob
-    adjusted_away_win_prob /= total_prob
-
     return adjusted_home_win_prob, draw_prob, adjusted_away_win_prob
 
 def generate_odds(home_team, away_team, season_data):
