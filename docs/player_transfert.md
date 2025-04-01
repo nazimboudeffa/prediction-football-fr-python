@@ -1,9 +1,3 @@
-## DATA
-
-https://www.footmercato.net/france/ligue-1/tableau/
-
-https://www.transfermarkt.com/ligue-1/transfers/wettbewerb/FR1
-
 ## LOGIC
 
 PROMPT : Que pense tu des changements sur les côtes si un joueur change d'équipe
