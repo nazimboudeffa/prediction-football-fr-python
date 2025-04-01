@@ -67,7 +67,7 @@ def calculate_odds(home_win_prob, draw_prob, away_win_prob):
         'away_win_odds': odds_away
     }
 
-def adjust_odds_for_home_away(home_win_prob, draw_prob, away_win_prob, home_advantage=0.1, away_advantage=-0.5):
+def adjust_probs_for_home_away(home_win_prob, draw_prob, away_win_prob, home_advantage=0.1, away_advantage=-0.05):
     """
     Adjust the odds based on whether a team is playing at home or away.
 
@@ -76,14 +76,18 @@ def adjust_odds_for_home_away(home_win_prob, draw_prob, away_win_prob, home_adva
     - draw_prob (float): Probability of a draw.
     - away_win_prob (float): Probability of an away win.
     - home_advantage (float): Multiplier for home advantage (default is 0.1).
-    - away_advantage (float): Multiplier for away advantage (default is -0.5).
+    - away_advantage (float): Multiplier for away advantage (default is -0.05).
 
     Returns:
     - tuple: Adjusted probabilities (home_win_prob, draw_prob, away_win_prob).
     """
     # Apply home advantage multiplier
-    adjusted_home_win_prob = home_win_prob * home_advantage
-    adjusted_away_win_prob = away_win_prob * away_advantage
+    adjusted_home_win_prob = home_win_prob + home_advantage
+    adjusted_away_win_prob = away_win_prob + away_advantage
+
+    # Ensure probabilities remain valid (non-negative)
+    adjusted_home_win_prob = max(0, adjusted_home_win_prob)
+    adjusted_away_win_prob = max(0, adjusted_away_win_prob)
 
     # Normalize probabilities to ensure they sum to 1
     total_prob = adjusted_home_win_prob + draw_prob + adjusted_away_win_prob
@@ -100,7 +104,7 @@ def generate_odds(home_team, away_team, season_data):
     home_win_prob, draw_prob, away_win_prob = calculate_probabilities(home_stats, away_stats)
     return calculate_odds(home_win_prob, draw_prob, away_win_prob)
 
-def generate_odds_with_home_away_adjustment(home_team, away_team, season_data, home_advantage=0.1, away_advantage=-0.5):
+def generate_odds_with_home_away_adjustment(home_team, away_team, season_data, home_advantage=0.1, away_advantage=-0.05):
     """
     Generate odds for a match between two teams with home and away adjustments.
 
@@ -109,7 +113,7 @@ def generate_odds_with_home_away_adjustment(home_team, away_team, season_data, h
     - away_team (str): Name of the away team.
     - season_data (pd.DataFrame): DataFrame containing the season data.
     - home_advantage (float): Multiplier for home advantage (default is 0.1).
-    - away_advantage (float): Multiplier for away advantage (default is -0.5).
+    - away_advantage (float): Multiplier for away advantage (default is -0.05).
     Returns:
     - dict: A dictionary containing the adjusted odds.
     """
@@ -119,7 +123,7 @@ def generate_odds_with_home_away_adjustment(home_team, away_team, season_data, h
     home_win_prob, draw_prob, away_win_prob = calculate_probabilities(home_stats, away_stats)
     
     # Adjust odds based on home and away advantages
-    adjusted_home_win_prob, adjusted_draw_prob, adjusted_away_win_prob = adjust_odds_for_home_away(
+    adjusted_home_win_prob, adjusted_draw_prob, adjusted_away_win_prob = adjust_probs_for_home_away(
         home_win_prob, draw_prob, away_win_prob, home_advantage, away_advantage
     )
 
