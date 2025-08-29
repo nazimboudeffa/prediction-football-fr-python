@@ -87,6 +87,39 @@ def adjust_probs_for_home_away(home_win_prob, draw_prob, away_win_prob, home_adv
 
     return adjusted_home_win_prob, draw_prob, adjusted_away_win_prob
 
+def calculate_odds(home_win_prob, draw_prob, away_win_prob, epsilon=1e-6):
+    """
+    Calculate odds from probabilities with safety for zero probabilities.
+    Always ensures finite odds.
+    """
+
+    # Convert to float and apply epsilon
+    home_win_prob = float(home_win_prob) if home_win_prob else 0.0
+    draw_prob = float(draw_prob) if draw_prob else 0.0
+    away_win_prob = float(away_win_prob) if away_win_prob else 0.0
+
+    # Replace zeros with epsilon
+    if home_win_prob <= 0: home_win_prob = epsilon
+    if draw_prob <= 0: draw_prob = epsilon
+    if away_win_prob <= 0: away_win_prob = epsilon
+
+    # Normalize so total = 1
+    total = home_win_prob + draw_prob + away_win_prob
+    home_win_prob /= total
+    draw_prob /= total
+    away_win_prob /= total
+
+    # Calculate odds
+    odds_home = round(1 / home_win_prob, 2)
+    odds_draw = round(1 / draw_prob, 2)
+    odds_away = round(1 / away_win_prob, 2)
+
+    return {
+        "home_win_odds": odds_home,
+        "draw_odds": odds_draw,
+        "away_win_odds": odds_away,
+    }
+
 def generate_odds(home_team, away_team, season_data):
     home_stats = get_team_stats(home_team, season_data)
     away_stats = get_team_stats(away_team, season_data)
