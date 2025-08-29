@@ -6,8 +6,6 @@ This project is designed to predict match odds for Ligue 1 football matches base
 
 https://understat.com (France)
 
-https://coteur.com (Algeria)
-
 https://www.footmercato.net/france/ligue-1/tableau/
 
 https://www.transfermarkt.com/ligue-1/transfers/wettbewerb/FR1
