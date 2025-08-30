@@ -1,195 +1,104 @@
-import pandas as pd
-
-def get_season_data(season_file):
+def calc_forces(stats):
     """
-    Load season data from a CSV file.
-
-    Parameters:
-    - season_file (str): Path to the season data file.
-
-    Returns:
-    - pd.DataFrame: The loaded season data.
+    stats : dict { equipe: { 'buts_pour': int, 'buts_contre': int, 'matchs': int } }
+    Retourne attaque et défense moyennes normalisées
     """
-    try:
-        season_data = pd.read_csv(season_file)
-        return season_data
-    except FileNotFoundError:
-        raise FileNotFoundError(f"File '{season_file}' not found.")
-    except pd.errors.EmptyDataError:
-        raise ValueError(f"File '{season_file}' is empty or invalid.")
-    except Exception as e:
-        raise ValueError(f"An error occurred while loading the file: {e}")
+    forces = {}
+    # Moyennes de la ligue
+    avg_attack = sum([s['buts_pour']/s['matchs'] for s in stats.values()]) / len(stats)
+    avg_defense = sum([s['buts_contre']/s['matchs'] for s in stats.values()]) / len(stats)
 
-def get_team_stats(team_name, season_data):
-    team_stats = season_data[season_data['Team'].str.strip().str.lower() == team_name.strip().lower()]
-    if team_stats.empty:
-        raise ValueError(f"Team '{team_name}' not found in the dataset.")
-    return team_stats.iloc[0]
+    for team, s in stats.items():
+        attaque = (s['buts_pour']/s['matchs']) / avg_attack
+        defense = (s['buts_contre']/s['matchs']) / avg_defense
+        forces[team] = {'attaque': attaque, 'defense': defense}
+    return forces
 
-def calculate_probabilities(home_stats, away_stats):
+def calc_prob(team_home, team_away, forces):
     """
-    Calculate probabilities for home win, away win, and draw.
-
-    Parameters:
-    - home_stats (pd.Series): Stats for the home team.
-    - away_stats (pd.Series): Stats for the away team.
-
-    Returns:
-    - tuple: (home_win_prob, draw_prob, away_win_prob)
+    Compare deux équipes et retourne probabilités & cotes
     """
-    home_win_prob = home_stats['W'] / home_stats['M']
-    away_win_prob = away_stats['W'] / away_stats['M']
-    draw_prob = (home_stats['D'] + away_stats['D']) / (home_stats['M'] + away_stats['M'])
+    att_home, def_home = forces[team_home]['attaque'], forces[team_home]['defense']
+    att_away, def_away = forces[team_away]['attaque'], forces[team_away]['defense']
 
-    return home_win_prob, draw_prob, away_win_prob
+    # Score relatif (plus haut = meilleure chance de gagner)
+    score_home = att_home / def_away
+    score_away = att_away / def_home
 
-def calculate_odds(home_win_prob, draw_prob, away_win_prob):
-    """
-    Calculate odds from probabilities.
+    # Bonus domicile (classique en foot)
+    score_home *= 1.2
 
-    Parameters:
-    - home_win_prob (float): Probability of a home win.
-    - draw_prob (float): Probability of a draw.
-    - away_win_prob (float): Probability of an away win.
+    total = score_home + score_away
+    p_home = score_home / total
+    p_away = score_away / total
 
-    Returns:
-    - dict: A dictionary containing the calculated odds.
-    """
-    total_prob = home_win_prob + draw_prob + away_win_prob
-
-    odds_home = round(1 / (home_win_prob / total_prob), 2) if home_win_prob > 0 else float('inf')
-    odds_draw = round(1 / (draw_prob / total_prob), 2) if draw_prob > 0 else float('inf')
-    odds_away = round(1 / (away_win_prob / total_prob), 2) if away_win_prob > 0 else float('inf')
+    # probabilité du nul comme moyenne pondérée
+    p_draw = 0.25 * (p_home + p_away)
+    # ajustement pour que somme = 1
+    norm = p_home + p_draw + p_away
+    p_home, p_draw, p_away = p_home/norm, p_draw/norm, p_away/norm
 
     return {
-        'home_win_odds': odds_home,
-        'draw_odds': odds_draw,
-        'away_win_odds': odds_away
+        "prob_home": round(p_home, 3),
+        "prob_draw": round(p_draw, 3),
+        "prob_away": round(p_away, 3),
+        "odds_home": round(1/p_home, 2),
+        "odds_draw": round(1/p_draw, 2),
+        "odds_away": round(1/p_away, 2),
     }
 
-def adjust_probs_for_home_away(home_win_prob, draw_prob, away_win_prob, home_advantage=0.1, away_advantage=-0.05):
+# ---- Exemple fictif ----
+stats = {
+    "PSG": {"buts_pour": 92, "buts_contre": 35, "matchs": 34},
+    "Marseille": {"buts_pour": 74, "buts_contre": 47, "matchs": 34}
+}
+
+forces = calc_forces(stats)
+cotes = calc_prob("PSG", "Marseille", forces)
+print(cotes)
+
+def calc_prob_from_ranking(home, away, classement, bonus_home=1.1):
     """
-    Adjust the odds based on whether a team is playing at home or away.
-
-    Parameters:
-    - home_win_prob (float): Probability of a home win.
-    - draw_prob (float): Probability of a draw.
-    - away_win_prob (float): Probability of an away win.
-    - home_advantage (float): Multiplier for home advantage (default is 0.1).
-    - away_advantage (float): Multiplier for away advantage (default is -0.05).
-
-    Returns:
-    - tuple: Adjusted probabilities (home_win_prob, draw_prob, away_win_prob).
+    home, away : noms des équipes
+    classement : dict {equipe: points}
+    bonus_home : multiplicateur pour l’avantage domicile
     """
-    # Apply home advantage multiplier
-    adjusted_home_win_prob = home_win_prob + home_advantage
-    adjusted_away_win_prob = away_win_prob + away_advantage
+    points_home = classement[home]
+    points_away = classement[away]
 
-    return adjusted_home_win_prob, draw_prob, adjusted_away_win_prob
+    # Force basée sur les points
+    score_home = points_home * bonus_home
+    score_away = points_away
 
-def calculate_odds(home_win_prob, draw_prob, away_win_prob, epsilon=1e-6):
-    """
-    Calculate odds from probabilities with safety for zero probabilities.
-    Always ensures finite odds.
-    """
+    # Probabilités brutes (sans nul)
+    p_home = score_home / (score_home + score_away)
+    p_away = 1 - p_home
 
-    # Convert to float and apply epsilon
-    home_win_prob = float(home_win_prob) if home_win_prob else 0.0
-    draw_prob = float(draw_prob) if draw_prob else 0.0
-    away_win_prob = float(away_win_prob) if away_win_prob else 0.0
+    # Probabilité du nul (fixe, ex: 25% du total)
+    p_draw = 0.25
+    # On réduit home/away proportionnellement pour faire de la place
+    p_home *= (1 - p_draw)
+    p_away *= (1 - p_draw)
 
-    # Replace zeros with epsilon
-    if home_win_prob <= 0: home_win_prob = epsilon
-    if draw_prob <= 0: draw_prob = epsilon
-    if away_win_prob <= 0: away_win_prob = epsilon
-
-    # Normalize so total = 1
-    total = home_win_prob + draw_prob + away_win_prob
-    home_win_prob /= total
-    draw_prob /= total
-    away_win_prob /= total
-
-    # Calculate odds
-    odds_home = round(1 / home_win_prob, 2)
-    odds_draw = round(1 / draw_prob, 2)
-    odds_away = round(1 / away_win_prob, 2)
-
+    # Cotes = inverse probabilité
     return {
-        "home_win_odds": odds_home,
-        "draw_odds": odds_draw,
-        "away_win_odds": odds_away,
+        "prob_home": round(p_home, 3),
+        "prob_draw": round(p_draw, 3),
+        "prob_away": round(p_away, 3),
+        "odds_home": round(1/p_home, 2),
+        "odds_draw": round(1/p_draw, 2),
+        "odds_away": round(1/p_away, 2)
     }
 
-def generate_odds(home_team, away_team, season_data):
-    home_stats = get_team_stats(home_team, season_data)
-    away_stats = get_team_stats(away_team, season_data)
+# ---- Exemple fictif avec le classement final 2024-2025 ----
+classement = {
+    "PSG": 84,
+    "Marseille": 65,
+    "Monaco": 61,
+    "Nice": 60,
+    "Lille": 60,
+    "Lyon": 57
+}
 
-    home_win_prob, draw_prob, away_win_prob = calculate_probabilities(home_stats, away_stats)
-    return calculate_odds(home_win_prob, draw_prob, away_win_prob)
-
-def generate_odds_with_home_away_adjustment(home_team, away_team, season_data, home_advantage=0.1, away_advantage=-0.05):
-    """
-    Generate odds for a match between two teams with home and away adjustments.
-
-    Parameters:
-    - home_team (str): Name of the home team.
-    - away_team (str): Name of the away team.
-    - season_data (pd.DataFrame): DataFrame containing the season data.
-    - home_advantage (float): Multiplier for home advantage (default is 0.1).
-    - away_advantage (float): Multiplier for away advantage (default is -0.05).
-    Returns:
-    - dict: A dictionary containing the adjusted odds.
-    """
-    home_stats = get_team_stats(home_team, season_data)
-    away_stats = get_team_stats(away_team, season_data)
-
-    home_win_prob, draw_prob, away_win_prob = calculate_probabilities(home_stats, away_stats)
-    
-    # Adjust odds based on home and away advantages
-    adjusted_home_win_prob, adjusted_draw_prob, adjusted_away_win_prob = adjust_probs_for_home_away(
-        home_win_prob, draw_prob, away_win_prob, home_advantage, away_advantage
-    )
-
-    return calculate_odds(adjusted_home_win_prob, adjusted_draw_prob, adjusted_away_win_prob)
-
-
-def generate_combined_odds(home_team, away_team, season_file_1, season_file_2, weight_current_season=0.6):
-    season_1_data = pd.read_csv(season_file_1)
-    season_2_data = pd.read_csv(season_file_2)
-
-    home_stats_1 = get_team_stats(home_team, season_1_data)
-    away_stats_1 = get_team_stats(away_team, season_1_data)
-
-    home_stats_2 = get_team_stats(home_team, season_2_data)
-    away_stats_2 = get_team_stats(away_team, season_2_data)
-
-    home_win_prob_1, draw_prob_1, away_win_prob_1 = calculate_probabilities(home_stats_1, away_stats_1)
-    home_win_prob_2, draw_prob_2, away_win_prob_2 = calculate_probabilities(home_stats_2, away_stats_2)
-
-    home_win_prob = weight_current_season * home_win_prob_2 + (1 - weight_current_season) * home_win_prob_1
-    draw_prob = weight_current_season * draw_prob_2 + (1 - weight_current_season) * draw_prob_1
-    away_win_prob = weight_current_season * away_win_prob_2 + (1 - weight_current_season) * away_win_prob_1
-
-    return calculate_odds(home_win_prob, draw_prob, away_win_prob)
-
-def generate_combined_odds_with_home_away_adjustment(home_team, away_team, season_file_1, season_file_2, weight_current_season=0.6, home_advantage=1.1):
-    season_1_data = get_season_data(season_file_1)
-    season_2_data = get_season_data(season_file_2)
-
-    home_stats_1 = get_team_stats(home_team, season_1_data)
-    away_stats_1 = get_team_stats(away_team, season_1_data)
-
-    home_stats_2 = get_team_stats(home_team, season_2_data)
-    away_stats_2 = get_team_stats(away_team, season_2_data)
-
-    home_win_prob_1, draw_prob_1, away_win_prob_1 = calculate_probabilities(home_stats_1, away_stats_1)
-    home_win_prob_2, draw_prob_2, away_win_prob_2 = calculate_probabilities(home_stats_2, away_stats_2)
-
-    home_win_prob = weight_current_season * home_win_prob_2 + (1 - weight_current_season) * home_win_prob_1
-    draw_prob = weight_current_season * draw_prob_2 + (1 - weight_current_season) * draw_prob_1
-    away_win_prob = weight_current_season * away_win_prob_2 + (1 - weight_current_season) * away_win_prob_1
-
-    home_win_prob, draw_prob, away_win_prob = adjust_odds_for_home_away(
-        home_win_prob, draw_prob, away_win_prob, home_advantage
-    )
-    return calculate_odds(home_win_prob, draw_prob, away_win_prob)
+cotes = calc_prob_from_ranking("PSG", "Marseille", classement)
+print(cotes)
