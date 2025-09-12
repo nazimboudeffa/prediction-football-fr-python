@@ -1,104 +1,41 @@
-def calc_forces(stats):
+import random
+import pandas as pd
+
+def generate_odds(teamA_name, teamB_name, data):
     """
-    stats : dict { equipe: { 'buts_pour': int, 'buts_contre': int, 'matchs': int } }
-    Retourne attaque et défense moyennes normalisées
+    Génère les cotes 1X2 pour un match entre teamA et teamB.
+    
+    teamA_name, teamB_name : noms des équipes (chaînes)
+    data : DataFrame du classement (doit contenir 'Team', 'PTS', 'Diff')
     """
-    forces = {}
-    # Moyennes de la ligue
-    avg_attack = sum([s['buts_pour']/s['matchs'] for s in stats.values()]) / len(stats)
-    avg_defense = sum([s['buts_contre']/s['matchs'] for s in stats.values()]) / len(stats)
+    # Extraction des infos depuis le DataFrame
+    teamA = data[data["Team"] == teamA_name].iloc[0]
+    teamB = data[data["Team"] == teamB_name].iloc[0]
 
-    for team, s in stats.items():
-        attaque = (s['buts_pour']/s['matchs']) / avg_attack
-        defense = (s['buts_contre']/s['matchs']) / avg_defense
-        forces[team] = {'attaque': attaque, 'defense': defense}
-    return forces
+    # Score de force basé sur les points et la différence de buts
+    strengthA = int(teamA["PTS"]) + int(teamA["Diff"]) * 0.3
+    strengthB = int(teamB["PTS"]) + int(teamB["Diff"]) * 0.3
 
-def calc_prob(team_home, team_away, forces):
-    """
-    Compare deux équipes et retourne probabilités & cotes
-    """
-    att_home, def_home = forces[team_home]['attaque'], forces[team_home]['defense']
-    att_away, def_away = forces[team_away]['attaque'], forces[team_away]['defense']
+    # Probabilités brutes
+    pA = strengthA / (strengthA + strengthB)
+    pB = strengthB / (strengthA + strengthB)
+    pDraw = 0.15 + 0.1 * (1 - abs(pA - pB))  # nul plus probable si forces proches
 
-    # Score relatif (plus haut = meilleure chance de gagner)
-    score_home = att_home / def_away
-    score_away = att_away / def_home
+    # Normalisation
+    total = pA + pB + pDraw
+    pA /= total
+    pB /= total
+    pDraw /= total
 
-    # Bonus domicile (classique en foot)
-    score_home *= 1.2
-
-    total = score_home + score_away
-    p_home = score_home / total
-    p_away = score_away / total
-
-    # probabilité du nul comme moyenne pondérée
-    p_draw = 0.25 * (p_home + p_away)
-    # ajustement pour que somme = 1
-    norm = p_home + p_draw + p_away
-    p_home, p_draw, p_away = p_home/norm, p_draw/norm, p_away/norm
+    # Conversion en cotes décimales (1/probabilité) + marge bookmaker
+    margin = 1.05
+    oddsA = round((1 / pA) * margin, 2)
+    oddsDraw = round((1 / pDraw) * margin, 2)
+    oddsB = round((1 / pB) * margin, 2)
 
     return {
-        "prob_home": round(p_home, 3),
-        "prob_draw": round(p_draw, 3),
-        "prob_away": round(p_away, 3),
-        "odds_home": round(1/p_home, 2),
-        "odds_draw": round(1/p_draw, 2),
-        "odds_away": round(1/p_away, 2),
+        "Match": f"{teamA_name} vs {teamB_name}",
+        "1": oddsA,
+        "X": oddsDraw,
+        "2": oddsB
     }
-
-# ---- Exemple fictif ----
-stats = {
-    "PSG": {"buts_pour": 92, "buts_contre": 35, "matchs": 34},
-    "Marseille": {"buts_pour": 74, "buts_contre": 47, "matchs": 34}
-}
-
-forces = calc_forces(stats)
-cotes = calc_prob("PSG", "Marseille", forces)
-print(cotes)
-
-def calc_prob_from_ranking(home, away, classement, bonus_home=1.1):
-    """
-    home, away : noms des équipes
-    classement : dict {equipe: points}
-    bonus_home : multiplicateur pour l’avantage domicile
-    """
-    points_home = classement[home]
-    points_away = classement[away]
-
-    # Force basée sur les points
-    score_home = points_home * bonus_home
-    score_away = points_away
-
-    # Probabilités brutes (sans nul)
-    p_home = score_home / (score_home + score_away)
-    p_away = 1 - p_home
-
-    # Probabilité du nul (fixe, ex: 25% du total)
-    p_draw = 0.25
-    # On réduit home/away proportionnellement pour faire de la place
-    p_home *= (1 - p_draw)
-    p_away *= (1 - p_draw)
-
-    # Cotes = inverse probabilité
-    return {
-        "prob_home": round(p_home, 3),
-        "prob_draw": round(p_draw, 3),
-        "prob_away": round(p_away, 3),
-        "odds_home": round(1/p_home, 2),
-        "odds_draw": round(1/p_draw, 2),
-        "odds_away": round(1/p_away, 2)
-    }
-
-# ---- Exemple fictif avec le classement final 2024-2025 ----
-classement = {
-    "PSG": 84,
-    "Marseille": 65,
-    "Monaco": 61,
-    "Nice": 60,
-    "Lille": 60,
-    "Lyon": 57
-}
-
-cotes = calc_prob_from_ranking("PSG", "Marseille", classement)
-print(cotes)
